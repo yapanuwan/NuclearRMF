@@ -1,4 +1,4 @@
-using DifferentialEquations
+using DifferentialEquations, Roots
 
 ħc = 197.327 # ħc in MeVfm
 M_n = 939.5654133 # Neutron mass in MeV/c2
@@ -28,4 +28,15 @@ function boundaryValue(κ, M, E, S, V, r_max, r_min=r_max/1000)
     prob = ODEProblem(dirac!, [0, 1], (r_min, r_max))
     sol = solve(prob, RK4(), p=(κ, M, E, S, V))
     return sol(r_max)[1]
+end
+
+"Find all bound energies between E_min (=0) and E_max (=M) where
+κ is the generalized angular momentum,
+M is the mass in MeV/c2,
+S(r) & V(r) are functions corresponding to scalar and vector potentials in MeV,
+r_max is the outer boundary,
+r_min (=r_max/1000) is inside boundary which cannot be 0 due to the centrifugal term."
+function findEs(κ, M, S, V, r_max, r_min=r_max/1000, E_min=0, E_max=M)
+    f(E) = boundaryValue(κ, M, E, S, V, r_max, r_min)
+    return find_zeros(f, (E_min, E_max))
 end

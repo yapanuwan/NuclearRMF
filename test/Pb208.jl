@@ -15,8 +15,18 @@ V_interp = linear_interpolation(xs, Vs)
 R_interp = linear_interpolation(xs, Rs)
 A_interp = linear_interpolation(xs, As)
 
-Es = collect(840:0.5:940)
-boundaryVals = [boundaryValue(-1, M_n, E, S_interp, V_interp, maximum(xs))^2 for E in Es]
+κ = -1
+M = M_n
+r_max = maximum(xs)
+E_min = M - 100
+E_max = M
+
+boundEs = findEs(κ, M_n, S_interp, V_interp, r_max, r_max/1000, E_min, E_max)
+println("bound E = $boundEs")
+
+Es = collect(E_min:0.5:E_max)
+boundaryVals = [boundaryValue(κ, M_n, E, S_interp, V_interp, r_max)^2 for E in Es]
 
 plot(Es, boundaryVals, yscale=:log10, label="g(r_max)^2")
+vline!(boundEs, label="bound E")
 xlabel!("E (MeV)")
