@@ -17,7 +17,13 @@ function dirac!(du, (g, f), (κ, M, E, S, V), r)
     du[2] =  (κ/r) * f - (E - M + S(r) - V(r)) * g / ħc
 end
 
-"Solve the Dirac equation and return g(r=r_max)"
+"Solve the Dirac equation and return g(r=r_max) for given scalar and vector potentials where
+κ is the generalized angular momentum,
+M is the mass in MeV/c2,
+E in the energy in MeV,
+S(r) & V(r) are functions corresponding to scalar and vector potentials in MeV,
+r_max is the outer boundary,
+r_min (=r_max/1000) is inside boundary which cannot be 0 due to the centrifugal term."
 function boundaryValue(κ, M, E, S, V, r_max, r_min=r_max/1000)
     prob = ODEProblem(dirac!, [0, 1], (r_min, r_max))
     sol = solve(prob, RK4(), p=(κ, M, E, S, V))
