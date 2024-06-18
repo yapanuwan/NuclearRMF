@@ -22,8 +22,8 @@ end
 M is the mass in MeV/c2,
 E in the energy in MeV,
 S(r) & V(r) are functions corresponding to scalar and vector potentials in MeV,
-r_max is the outer boundary,
-r_min (=r_max/1000) is inside boundary which cannot be 0 due to the centrifugal term."
+r_max is the outer boundary in fm,
+r_min (=r_max/1000) is inside boundary in fm which cannot be 0 due to the centrifugal term."
 function boundaryValue(κ, M, E, S, V, r_max, r_min=r_max/1000)
     prob = ODEProblem(dirac!, [0, 1], (r_min, r_max))
     sol = solve(prob, RK4(), p=(κ, M, E, S, V))
@@ -34,8 +34,8 @@ end
 κ is the generalized angular momentum,
 M is the mass in MeV/c2,
 S(r) & V(r) are functions corresponding to scalar and vector potentials in MeV,
-r_max is the outer boundary,
-r_min (=r_max/1000) is inside boundary which cannot be 0 due to the centrifugal term."
+r_max is the outer boundary in fm,
+r_min (=r_max/1000) is inside boundary in fm which cannot be 0 due to the centrifugal term."
 function findEs(κ, M, S, V, r_max, r_min=r_max/1000, E_min=0, E_max=M)
     f(E) = boundaryValue(κ, M, E, S, V, r_max, r_min)
     return find_zeros(f, (E_min, E_max))
