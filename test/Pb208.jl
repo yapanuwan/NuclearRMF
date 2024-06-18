@@ -16,16 +16,16 @@ R_interp = linear_interpolation(xs, Rs)
 A_interp = linear_interpolation(xs, As)
 
 κ = -1
-M = M_n
+p = true
 r_max = maximum(xs)
-E_min = M - 100
-E_max = M
+E_min = 850
+E_max = 939
 
-boundEs = findEs(κ, M_n, S_interp, V_interp, r_max, r_max/1000, E_min, E_max)
+boundEs = findEs(κ, p, S_interp, V_interp, R_interp, A_interp, r_max, r_max/1000, E_min, E_max)
 println("bound E = $boundEs")
 
 Es = collect(E_min:0.5:E_max)
-boundaryVals = [boundaryValue(κ, M_n, E, S_interp, V_interp, r_max)^2 for E in Es]
+boundaryVals = [boundaryValue(κ, p, E, S_interp, V_interp, R_interp, A_interp, r_max)^2 for E in Es]
 
 plot(Es, boundaryVals, yscale=:log10, label="g(r_max)^2")
 vline!(boundEs, label="bound E")

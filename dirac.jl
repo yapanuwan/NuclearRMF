@@ -5,31 +5,35 @@ M_n = 939.5654133 # Neutron mass in MeV/c2
 M_p = 938.2720813 # Proton mass in MeV/c2
 
 "The spherical Dirac equation that returns du=[dg, df] in-place where
-    (g, f) are the reduced radial components evaluated at r,
+    u=[g, f] are the reduced radial components evaluated at r,
     κ is the generalized angular momentum,
-    M is the mass in MeV/c2,
+    p is true for proton and false for neutron,
     E in the energy in MeV,
-    Φ0, W0 are the mean-field potentials (couplings included) in MeV as functions of r in fm,
+    Φ0, W0, B0, A0 are the mean-field potentials (couplings included) in MeV as functions of r in fm,
     r is the radius in fm.
 Reference: P. Giuliani, K. Godbey, E. Bonilla, F. Viens, and J. Piekarewicz, Frontiers in Physics 10, (2023)"
-function dirac!(du, (g, f), (κ, M, E, Φ0, W0), r)
-    du[1] = -(κ/r) * g + (E + M - Φ0(r) - W0(r)) * f / ħc
-    du[2] =  (κ/r) * f - (E - M + Φ0(r) - W0(r)) * g / ħc
+function dirac!(du, u, (κ, p, E, Φ0, W0, B0, A0), r)
+    M = p ? M_p : M_n
+    common1 = E - W0(r) - (p - 0.5) * B0(r) - p * A0(r)
+    common2 = M - Φ0(r)
+    (g, f) = u
+    du[1] = -(κ/r) * g + (common1 + common2) * f / ħc
+    du[2] =  (κ/r) * f - (common1 - common2) * g / ħc
 end
 
 "Solve the Dirac equation and return g(r=r_max) for given scalar and vector potentials where
     r_max is the outer boundary in fm,
     r_min (=r_max/1000) is inside boundary in fm which cannot be 0 due to the centrifugal term,
     the other parameters are the same from dirac!(...)."
-function boundaryValue(κ, M, E, Φ0, W0, r_max, r_min=r_max/1000)
+function boundaryValue(κ, p, E, Φ0, W0, B0, A0, r_max, r_min=r_max/1000)
     prob = ODEProblem(dirac!, [0, 1], (r_min, r_max))
-    sol = solve(prob, RK4(), p=(κ, M, E, Φ0, W0))
+    sol = solve(prob, RK4(), p=(κ, p, E, Φ0, W0, B0, A0))
     return sol(r_max)[1]
 end
 
-"Find all bound energies between E_min (=0) and E_max (=M) where
+"Find all bound energies between E_min (=0) and E_max (=mass) where
     the other parameters are the same from dirac!(...)."
-function findEs(κ, M, Φ0, W0, r_max, r_min=r_max/1000, E_min=0, E_max=M)
-    f(E) = boundaryValue(κ, M, E, Φ0, W0, r_max, r_min)
+function findEs(κ, p, Φ0, W0, B0, A0, r_max, r_min=r_max/1000, E_min=0, E_max=(p ? M_p : M_n))
+    f(E) = boundaryValue(κ, p, E, Φ0, W0, B0, A0, r_max, r_min)
     return find_zeros(f, (E_min, E_max))
 end
