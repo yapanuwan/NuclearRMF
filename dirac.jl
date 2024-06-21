@@ -28,8 +28,8 @@ end
     the other parameters are the same from dirac!(...)."
 function boundaryValue(κ, p, E, Φ0, W0, B0, A0, r_max)
     prob = ODEProblem(dirac!, [0, 1], (0, r_max))
-    sol = solve(prob, RK4(), p=(κ, p, E, Φ0, W0, B0, A0))
-    return sol(r_max)[1]
+    sol = solve(prob, RK4(), p=(κ, p, E, Φ0, W0, B0, A0), saveat=[r_max], save_idxs=[1])
+    return sol[1, 1]
 end
 
 "Find all bound energies between E_min (=0) and E_max (=mass) where
