@@ -18,10 +18,10 @@ A_interp = linear_interpolation(xs, As)
 κ = -1
 p = true
 r_max = maximum(xs)
-E_min = 850
+E_min = 880
 E_max = 939
 
-boundEs = findEs(κ, p, S_interp, V_interp, R_interp, A_interp, r_max, r_max/1000, E_min, E_max)
+boundEs = findEs(κ, p, S_interp, V_interp, R_interp, A_interp, r_max, E_min, E_max)
 println("bound E = $boundEs")
 
 Es = collect(E_min:0.5:E_max)
