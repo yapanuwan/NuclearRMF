@@ -1,8 +1,8 @@
 using DifferentialEquations, Roots
 
-ħc = 197.327 # ħc in MeVfm
-M_n = 939.5654133 # Neutron mass in MeV/c2
-M_p = 938.2720813 # Proton mass in MeV/c2
+const ħc = 197.327 # ħc in MeVfm
+const M_n = 939.5654133 # Neutron mass in MeV/c2
+const M_p = 938.2720813 # Proton mass in MeV/c2
 
 const r_reg = 1E-6 # regulator for the centrifugal term in fm
 
