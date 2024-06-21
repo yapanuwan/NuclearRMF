@@ -38,3 +38,26 @@ function findEs(κ, p, Φ0, W0, B0, A0, r_max, E_min=0, E_max=(p ? M_p : M_n))
     f(E) = boundaryValue(κ, p, E, Φ0, W0, B0, A0, r_max)
     return find_zeros(f, (E_min, E_max))
 end
+
+"Find N lowest lying orbitals and return two lists containing κ values and corresponding energies for a single species where
+    the other parameters are defined above"
+function fillNucleons(N, p, Φ0, W0, B0, A0, r_max, E_min=0, E_max=(p ? M_p : M_n))
+    κs = Int[]
+    Es = Float64[]
+    # start from κ=-1 and go both up and down
+    for direction in [-1, 1]
+        for κ in direction * (1:100) # cutoff is 100
+            new_Es = findEs(κ, p, Φ0, W0, B0, A0, r_max, E_min, E_max)
+            if isempty(new_Es); break; end
+            append!(Es, new_Es)
+            append!(κs, fill(κ, length(new_Es)))
+        end
+    end
+    if length(Es) < N
+        @warn "Only found $(length(Es)) orbitals for $N nucleons"
+        return (κs, Es)
+    else
+        idxs = sortperm(Es)[1:N]
+        return (κs[idxs], Es[idxs])
+    end
+end
