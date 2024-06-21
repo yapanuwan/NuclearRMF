@@ -26,7 +26,7 @@ end
 "Solve the Dirac equation and return g(r=r_max) for given scalar and vector potentials where
     r_max is the outer boundary in fm,
     the other parameters are the same from dirac!(...)."
-function boundaryValue(κ, p, E, Φ0, W0, B0, A0, r_max,)
+function boundaryValue(κ, p, E, Φ0, W0, B0, A0, r_max)
     prob = ODEProblem(dirac!, [0, 1], (0, r_max))
     sol = solve(prob, RK4(), p=(κ, p, E, Φ0, W0, B0, A0))
     return sol(r_max)[1]
