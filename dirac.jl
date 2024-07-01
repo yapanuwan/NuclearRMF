@@ -39,9 +39,9 @@ function findEs(κ, p, Φ0, W0, B0, A0, r_max, E_min=0, E_max=(p ? M_p : M_n))
     return find_zeros(f, (E_min, E_max))
 end
 
-"Find N lowest lying orbitals and return two lists containing κ values and corresponding energies for a single species where
+"Find all orbitals and return two lists containing κ values and corresponding energies for a single species where
     the other parameters are defined above"
-function fillNucleons(N, p, Φ0, W0, B0, A0, r_max, E_min=0, E_max=(p ? M_p : M_n))
+function findAllOrbitals(p, Φ0, W0, B0, A0, r_max, E_min=0, E_max=(p ? M_p : M_n))
     κs = Int[]
     Es = Float64[]
     # start from κ=-1 and go both up and down
@@ -53,11 +53,28 @@ function fillNucleons(N, p, Φ0, W0, B0, A0, r_max, E_min=0, E_max=(p ? M_p : M_
             append!(κs, fill(κ, length(new_Es)))
         end
     end
-    if length(Es) < N
-        @warn "Only found $(length(Es)) orbitals for $N nucleons"
-        return (κs, Es)
-    else
-        idxs = sortperm(Es)[1:N]
-        return (κs[idxs], Es[idxs])
-    end
+    return (κs, Es)
 end
+
+"For a given list of κ values with corresponding energies, attempt to fill N lowest lying orbitals and return occupancy numbers"
+function fillNucleons(N::Int, κs, Es)
+    sort_i = sortperm(Es)
+
+    occ = zeros(Int, length(κs))
+
+    for i in sort_i
+        if N ≤ 0; break; end;
+        max_occ = 2 * j_κ(κs[i]) + 1
+        occ[i] = min(max_occ, N)
+        N -= occ[i]
+    end
+
+    N == 0 || @warn "All orbitals could not be filled"
+    return occ
+end
+
+"Total angular momentum j for a given κ value"
+j_κ(κ::Int) = abs(κ) - 1/2
+
+"Orbital angular momentum l for a given κ value"
+l_κ(κ::Int) = abs(κ) - (κ < 0) # since true = 1 and false = 0

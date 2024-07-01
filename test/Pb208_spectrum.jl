@@ -21,8 +21,10 @@ r_max = maximum(xs)
 E_min = 880
 E_max = 939
 
-κs, Es = fillNucleons(N, p, S_interp, V_interp, R_interp, A_interp, r_max, E_min, E_max)
+κs, Es = findAllOrbitals(p, S_interp, V_interp, R_interp, A_interp, r_max, E_min, E_max)
+occ = fillNucleons(N, κs, Es)
 
 scatter(κs, Es, label=(p ? "proton" : "neutron") * " spectrum")
+annotate!(κs .+ 0.3, Es, occ)
 xlabel!("κ")
 ylabel!("E (MeV)")
