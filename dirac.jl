@@ -23,6 +23,15 @@ function dirac!(du, u, (κ, p, E, Φ0, W0, B0, A0), r)
     du[2] =  (κ/(r + r_reg)) * f - (common1 - common2) * g / ħc
 end
 
+"Solve the Dirac equation and return the wave function u(r)=[g(r), f(r)] where
+    divs is the number of mesh divisions if the solution should be discretized as a 2×(1+divs) matrix (keep divs=0 to obtain an interpolating function),
+    the other parameters are the same from dirac!(...)."
+function solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs::Int=0)
+    prob = ODEProblem(dirac!, [0, 1], (0, r_max))
+    sol = solve(prob, RK4(), p=(κ, p, E, Φ0, W0, B0, A0), saveat=(divs == 0 ? [] : r_max/divs))
+    return divs == 0 ? sol : hcat(sol.u...)
+end
+
 "Solve the Dirac equation and return g(r=r_max) where
     r_max is the outer boundary in fm,
     the other parameters are the same from dirac!(...)."
