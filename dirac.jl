@@ -23,7 +23,7 @@ function dirac!(du, u, (κ, p, E, Φ0, W0, B0, A0), r)
     du[2] =  (κ/(r + r_reg)) * f - (common1 - common2) * g / ħc
 end
 
-"Solve the Dirac equation and return g(r=r_max) for given scalar and vector potentials where
+"Solve the Dirac equation and return g(r=r_max) where
     r_max is the outer boundary in fm,
     the other parameters are the same from dirac!(...)."
 function boundaryValue(κ, p, E, Φ0, W0, B0, A0, r_max)
