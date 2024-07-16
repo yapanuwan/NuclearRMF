@@ -26,18 +26,18 @@ end
 "Solve the Dirac equation and return the wave function u(r)=[g(r), f(r)] where
     divs is the number of mesh divisions if the solution should be discretized as a 2×(1+divs) matrix (keep divs=0 to obtain an interpolating function),
     the other parameters are the same from dirac!(...)."
-function solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs::Int=0)
-    prob = ODEProblem(dirac!, [0, 1], (0, r_max))
-    sol = solve(prob, RK4(), p=(κ, p, E, Φ0, W0, B0, A0), saveat=(divs == 0 ? [] : r_max/divs))
+function solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs::Int=0; dtype=BigFloat, algo=Feagin12())
+    prob = ODEProblem(dirac!, convert.(dtype, [0, 1]), (0, r_max))
+    sol = solve(prob, algo, p=(κ, p, E, Φ0, W0, B0, A0), saveat=(divs == 0 ? [] : r_max/divs))
     return divs == 0 ? sol : hcat(sol.u...)
 end
 
 "Solve the Dirac equation and return g(r=r_max) where
     r_max is the outer boundary in fm,
     the other parameters are the same from dirac!(...)."
-function boundaryValue(κ, p, E, Φ0, W0, B0, A0, r_max)
-    prob = ODEProblem(dirac!, [0, 1], (0, r_max))
-    sol = solve(prob, RK4(), p=(κ, p, E, Φ0, W0, B0, A0), saveat=[r_max], save_idxs=[1])
+function boundaryValue(κ, p, E, Φ0, W0, B0, A0, r_max; dtype=Float64, algo=RK4())
+    prob = ODEProblem(dirac!, convert.(dtype, [0, 1]), (0, r_max))
+    sol = solve(prob, algo, p=(κ, p, E, Φ0, W0, B0, A0), saveat=[r_max], save_idxs=[1])
     return sol[1, 1]
 end
 
@@ -46,6 +46,13 @@ end
 function findEs(κ, p, Φ0, W0, B0, A0, r_max, E_min=0, E_max=(p ? M_p : M_n))
     f(E) = boundaryValue(κ, p, E, Φ0, W0, B0, A0, r_max)
     return find_zeros(f, (E_min, E_max))
+end
+
+"Find more precise bound energies for a given list of Es where
+    the other parameters are the same from dirac!(...)."
+function refineEs(κ, p, Φ0, W0, B0, A0, r_max, Es)
+    f(E) = boundaryValue(κ, p, E, Φ0, W0, B0, A0, r_max; dtype=BigFloat, algo=Feagin12())
+    return [find_zero(f, E) for E in Es]
 end
 
 "Find all orbitals and return two lists containing κ values and corresponding energies for a single species where

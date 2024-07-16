@@ -21,14 +21,14 @@ r_max = maximum(xs)
 E_min = 880
 E_max = 939
 
-boundEs = findEs(κ, p, S_interp, V_interp, R_interp, A_interp, r_max, E_min, E_max)
-groundE = minimum(boundEs)
+approxE = findEs(κ, p, S_interp, V_interp, R_interp, A_interp, r_max, E_min, E_max) |> minimum
+groundE = refineEs(κ, p, S_interp, V_interp, R_interp, A_interp, r_max, [approxE])[1]
+
 println("ground state E = $groundE")
 
-plot_r_max = r_max * 0.75
 divs = 50
-wf = solveWf(κ, p, groundE, S_interp, V_interp, R_interp, A_interp, plot_r_max, divs)
-rs = collect(0: plot_r_max/divs : plot_r_max)
+wf = solveWf(κ, p, groundE, S_interp, V_interp, R_interp, A_interp, r_max, divs)
+rs = range(0, r_max, length=divs+1)
 gs = wf[1, :]
 fs = wf[2, :]
 
