@@ -25,8 +25,20 @@ end
 
 "Solve the Dirac equation and return the wave function u(r)=[g(r), f(r)] where
     divs is the number of mesh divisions if the solution should be discretized as a 2×(1+divs) matrix (keep divs=0 to obtain an interpolating function),
+    refine determines whether to switch to high-precision mode and optimize the energy beforehand (assuming a bound state),
     the other parameters are the same from dirac!(...)."
-function solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs::Int=0; dtype=BigFloat, algo=Feagin12())
+function solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs::Int=0, refine=true)
+    if refine
+        dtype = BigFloat
+        algo = Feagin12()
+
+        f(E_) = boundaryValue(κ, p, E_, Φ0, W0, B0, A0, r_max; dtype=dtype, algo=algo)
+        E = find_zero(f, E)
+    else
+        dtype = Float64
+        algo = RK()
+    end
+
     prob = ODEProblem(dirac!, convert.(dtype, [0, 1]), (0, r_max))
     sol = solve(prob, algo, p=(κ, p, E, Φ0, W0, B0, A0), saveat=(divs == 0 ? [] : r_max/divs))
     return divs == 0 ? sol : hcat(sol.u...)
@@ -46,13 +58,6 @@ end
 function findEs(κ, p, Φ0, W0, B0, A0, r_max, E_min=0, E_max=(p ? M_p : M_n))
     f(E) = boundaryValue(κ, p, E, Φ0, W0, B0, A0, r_max)
     return find_zeros(f, (E_min, E_max))
-end
-
-"Find more precise bound energies for a given list of Es where
-    the other parameters are the same from dirac!(...)."
-function refineEs(κ, p, Φ0, W0, B0, A0, r_max, Es)
-    f(E) = boundaryValue(κ, p, E, Φ0, W0, B0, A0, r_max; dtype=BigFloat, algo=Feagin12())
-    return [find_zero(f, E) for E in Es]
 end
 
 "Find all orbitals and return two lists containing κ values and corresponding energies for a single species where

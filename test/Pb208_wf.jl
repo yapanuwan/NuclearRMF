@@ -21,9 +21,7 @@ r_max = maximum(xs)
 E_min = 880
 E_max = 939
 
-approxE = findEs(κ, p, S_interp, V_interp, R_interp, A_interp, r_max, E_min, E_max) |> minimum
-groundE = refineEs(κ, p, S_interp, V_interp, R_interp, A_interp, r_max, [approxE])[1]
-
+groundE = findEs(κ, p, S_interp, V_interp, R_interp, A_interp, r_max, E_min, E_max) |> minimum
 println("ground state E = $groundE")
 
 divs = 50
