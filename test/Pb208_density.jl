@@ -21,7 +21,7 @@ N = 82
 r_max = maximum(xs)
 E_min = 880
 E_max = 939
-divs = 50
+divs = 400
 
 (ρ_s, ρ_v) = calculateNucleonDensity(N, p, S_interp, V_interp, R_interp, A_interp, r_max, divs, E_min, E_max)
 
