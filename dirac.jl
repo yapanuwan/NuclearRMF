@@ -25,7 +25,7 @@ end
 
 "Solve the Dirac equation and return the wave function u(r)=[g(r), f(r)] where
     divs is the number of mesh divisions so solution would be returned as a 2×(1+divs) matrix,
-    refine determines whether to switch to high-precision mode and optimize the energy beforehand (assuming a bound state),
+    refine determines whether to internally enable high-precision mode and optimize the energy beforehand (assuming a bound state),
     the other parameters are the same from dirac!(...)."
 function solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs; refine=true, normalize=true)
     if refine
@@ -41,7 +41,7 @@ function solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs; refine=true, normalize=
 
     prob = ODEProblem(dirac!, convert.(dtype, [0, 1]), (0, r_max))
     sol = solve(prob, algo, p=(κ, p, E, Φ0, W0, B0, A0), saveat=r_max/divs)
-    wf = hcat(sol.u...)
+    wf = Float64.(hcat(sol.u...))
 
     if normalize
         norm = sum(wf .* wf) * r_max / divs # integration by Reimann sum
