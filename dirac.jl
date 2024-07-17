@@ -33,7 +33,7 @@ function solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs::Int=0, refine=true)
         algo = Feagin12()
 
         f(E_) = boundaryValue(κ, p, E_, Φ0, W0, B0, A0, r_max; dtype=dtype, algo=algo)
-        E = find_zero(f, E)
+        E = find_zero(f, convert(dtype, E))
     else
         dtype = Float64
         algo = RK()
@@ -99,3 +99,26 @@ j_κ(κ::Int) = abs(κ) - 1/2
 
 "Orbital angular momentum l for a given κ value"
 l_κ(κ::Int) = abs(κ) - (κ < 0) # since true = 1 and false = 0
+
+"Calculate scalar and vector densities of a nucleon species on [0,r_max] divided into (divs+1) points and returns them as vectors (ρ_s, ρ_v) where
+    the other parameters are defined above"
+function calculateNucleonDensity(N, p, Φ0, W0, B0, A0, r_max, divs, E_min=0, E_max=(p ? M_p : M_n))
+    κs, Es = findAllOrbitals(p, Φ0, W0, B0, A0, r_max, E_min, E_max)
+    occs = fillNucleons(N, κs, Es)
+    
+    r2s = (collect ∘ range)(0, r_max, length=divs+1).^2 |> transpose
+
+    ρ_s = zeros(divs + 1)
+    ρ_v = zeros(divs + 1)
+    
+    for (κ, E, occ) in zip(κs, Es, occs)
+        wf = solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs) # TODO: Needs to be normalized
+        wf2 = wf .* wf
+        ρ = (occ / (4 * pi)) * (wf2 ./ r2s)  # 2j+1 factor is accounted in the occupancy number
+
+        ρ_s += ρ[1, :] - ρ[2, :] # g^2 - f^2
+        ρ_v += ρ[1, :] + ρ[2, :] # g^2 + f^2
+    end
+
+    return (ρ_s, ρ_v)
+end
