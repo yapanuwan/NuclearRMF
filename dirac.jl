@@ -24,10 +24,10 @@ function dirac!(du, u, (κ, p, E, Φ0, W0, B0, A0), r)
 end
 
 "Solve the Dirac equation and return the wave function u(r)=[g(r), f(r)] where
-    divs is the number of mesh divisions if the solution should be discretized as a 2×(1+divs) matrix (keep divs=0 to obtain an interpolating function),
+    divs is the number of mesh divisions so solution would be returned as a 2×(1+divs) matrix,
     refine determines whether to switch to high-precision mode and optimize the energy beforehand (assuming a bound state),
     the other parameters are the same from dirac!(...)."
-function solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs::Int=0, refine=true)
+function solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs; refine=true, normalize=true)
     if refine
         dtype = BigFloat
         algo = Feagin12()
@@ -40,8 +40,15 @@ function solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs::Int=0, refine=true)
     end
 
     prob = ODEProblem(dirac!, convert.(dtype, [0, 1]), (0, r_max))
-    sol = solve(prob, algo, p=(κ, p, E, Φ0, W0, B0, A0), saveat=(divs == 0 ? [] : r_max/divs))
-    return divs == 0 ? sol : hcat(sol.u...)
+    sol = solve(prob, algo, p=(κ, p, E, Φ0, W0, B0, A0), saveat=r_max/divs)
+    wf = hcat(sol.u...)
+
+    if normalize
+        norm = sum(wf .* wf) * r_max / divs # integration by Reimann sum
+        wf = wf ./ sqrt(norm)
+    end
+
+    return wf
 end
 
 "Solve the Dirac equation and return g(r=r_max) where
@@ -112,7 +119,7 @@ function calculateNucleonDensity(N, p, Φ0, W0, B0, A0, r_max, divs, E_min=0, E_
     ρ_v = zeros(divs + 1)
     
     for (κ, E, occ) in zip(κs, Es, occs)
-        wf = solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs) # TODO: Needs to be normalized
+        wf = solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs; refine=true, normalize=true)
         wf2 = wf .* wf
         ρ = (occ / (4 * pi)) * (wf2 ./ r2s)  # 2j+1 factor is accounted in the occupancy number
 
