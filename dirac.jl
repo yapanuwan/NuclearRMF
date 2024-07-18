@@ -113,19 +113,20 @@ function calculateNucleonDensity(N, p, Φ0, W0, B0, A0, r_max, divs, E_min=0, E_
     κs, Es = findAllOrbitals(p, Φ0, W0, B0, A0, r_max, E_min, E_max)
     occs = fillNucleons(N, κs, Es)
     
-    r2s = (collect ∘ range)(0, r_max, length=divs+1).^2 |> transpose
-
-    ρ_s = zeros(divs + 1)
-    ρ_v = zeros(divs + 1)
+    ρr2 = zeros(2, divs + 1) # ρ×r² values
     
     for (κ, E, occ) in zip(κs, Es, occs)
         wf = solveWf(κ, p, E, Φ0, W0, B0, A0, r_max, divs; refine=true, normalize=true)
         wf2 = wf .* wf
-        ρ = (occ / (4 * pi)) * (wf2 ./ r2s)  # 2j+1 factor is accounted in the occupancy number
-
-        ρ_s += ρ[1, :] - ρ[2, :] # g^2 - f^2
-        ρ_v += ρ[1, :] + ρ[2, :] # g^2 + f^2
+        ρr2 += (occ / (4 * pi)) * wf2 # 2j+1 factor is accounted in the occupancy number
     end
 
+    r2s = (collect ∘ range)(0, r_max, length=divs+1).^2
+    ρ = ρr2 ./ transpose(r2s)
+    ρ[:, 1] .= ρ[:, 2] # dirty fix for NaN at r=0
+    
+    ρ_s = ρ[1, :] - ρ[2, :] # g^2 - f^2
+    ρ_v = ρ[1, :] + ρ[2, :] # g^2 + f^2
+    
     return (ρ_s, ρ_v)
 end
